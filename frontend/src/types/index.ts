@@ -1,4 +1,4 @@
-export type Mode = 'merchant_buyer' | 'disfluency';
+export type Mode = 'merchant_buyer' | 'disfluency' | 'streaming_merchant_buyer';
 
 export interface Segment {
   id: number;

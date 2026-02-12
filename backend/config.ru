@@ -3,4 +3,5 @@
 require_relative 'config/environment'
 require_relative 'app'
 
+use RealtimeWebSocketHandler
 run TranscriptionApp

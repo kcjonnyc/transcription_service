@@ -35,9 +35,7 @@ class OpenAIClient
       parameters: {
         file: file,
         model: DIARIZATION_MODEL,
-        response_format: 'verbose_json',
-        include: ['logprobs'],
-        timestamp_granularities: ['word']
+        response_format: 'json'
       }
     )
     handle_response(response)

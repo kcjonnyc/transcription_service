@@ -16,6 +16,13 @@ function ModeSelector({ mode, onModeChange }: ModeSelectorProps) {
         Merchant-Buyer Conversation
       </button>
       <button
+        className={`mode-tab ${mode === 'streaming_merchant_buyer' ? 'active' : ''}`}
+        onClick={() => onModeChange('streaming_merchant_buyer')}
+      >
+        <span className="mode-tab-icon">&#127908;</span>
+        Live Merchant-Buyer
+      </button>
+      <button
         className={`mode-tab ${mode === 'disfluency' ? 'active' : ''}`}
         onClick={() => onModeChange('disfluency')}
       >

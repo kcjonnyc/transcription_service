@@ -2,17 +2,22 @@ import { useState } from 'react';
 import './App.css';
 import { Mode, TranscriptionResponse } from './types';
 import { transcribeAudio } from './api/transcriptionApi';
+import { useStreamingTranscription } from './hooks/useStreamingTranscription';
 import ModeSelector from './components/ModeSelector';
 import AudioUploader from './components/AudioUploader';
 import TranscriptionStatus from './components/TranscriptionStatus';
 import MerchantBuyerResult from './components/merchant/MerchantBuyerResult';
 import DisfluencyResult from './components/disfluency/DisfluencyResult';
+import StreamingRecorder from './components/streaming/StreamingRecorder';
+import LiveTranscript from './components/streaming/LiveTranscript';
 
 function App() {
   const [mode, setMode] = useState<Mode>('merchant_buyer');
   const [result, setResult] = useState<TranscriptionResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const streaming = useStreamingTranscription();
 
   async function handleUpload(file: File, translate: boolean) {
     setIsLoading(true);
@@ -42,7 +47,13 @@ function App() {
     setMode(newMode);
     setResult(null);
     setError(null);
+    if (newMode !== 'streaming_merchant_buyer') {
+      streaming.reset();
+    }
   }
+
+  const isStreaming = mode === 'streaming_merchant_buyer';
+  const displayError = isStreaming ? streaming.error : error;
 
   return (
     <div className="app">
@@ -56,27 +67,50 @@ function App() {
       <main className="app-main">
         <ModeSelector mode={mode} onModeChange={handleModeChange} />
 
-        <AudioUploader
-          onUpload={handleUpload}
-          mode={mode}
-          isLoading={isLoading}
-        />
+        {isStreaming ? (
+          <>
+            <StreamingRecorder
+              phase={streaming.phase}
+              durationWarning={streaming.durationWarning}
+              onStart={streaming.startRecording}
+              onStop={streaming.stopRecording}
+            />
 
-        <TranscriptionStatus isLoading={isLoading} mode={mode} />
+            <LiveTranscript
+              phase={streaming.phase}
+              segments={streaming.segments}
+              interimText={streaming.interimText}
+            />
 
-        {error && (
+            {streaming.finalResult && (
+              <MerchantBuyerResult result={streaming.finalResult} />
+            )}
+          </>
+        ) : (
+          <>
+            <AudioUploader
+              onUpload={handleUpload}
+              mode={mode}
+              isLoading={isLoading}
+            />
+
+            <TranscriptionStatus isLoading={isLoading} mode={mode} />
+
+            {result && result.mode === 'merchant_buyer' && (
+              <MerchantBuyerResult result={result} />
+            )}
+
+            {result && result.mode === 'disfluency' && (
+              <DisfluencyResult result={result} />
+            )}
+          </>
+        )}
+
+        {displayError && (
           <div className="error-alert">
             <span className="error-icon">!</span>
-            <span className="error-message">{error}</span>
+            <span className="error-message">{displayError}</span>
           </div>
-        )}
-
-        {result && result.mode === 'merchant_buyer' && (
-          <MerchantBuyerResult result={result} />
-        )}
-
-        {result && result.mode === 'disfluency' && (
-          <DisfluencyResult result={result} />
         )}
       </main>
 
