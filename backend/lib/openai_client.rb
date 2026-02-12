@@ -7,11 +7,11 @@ require 'openai'
 class OpenAIClient
   class ApiError < StandardError; end
 
-  LOG_LEVEL = ENV.fetch('LOG_LEVEL', 'INFO').upcase
+  LOG_LEVEL = ENV.fetch('LOG_LEVEL', 'INFO')
 
   DEFAULT_BASE_URL = 'https://api.openai.com/v1'
 
-  DIARIZATION_MODEL = 'gpt-4o-transcribe'
+  DIARIZATION_MODEL = 'gpt-4o-transcribe-diarize'
   DISFLUENCY_TRANSCRIPTION_MODEL = 'whisper-1'
   CHAT_MODEL = 'gpt-4o-mini'
 
@@ -35,11 +35,11 @@ class OpenAIClient
       parameters: {
         file: file,
         model: DIARIZATION_MODEL,
-        response_format: 'verbose_json',
-        include: ['logprobs'],
-        timestamp_granularities: ['word']
+        response_format: 'diarized_json',
+        chunking_strategy: "auto"
       }
     )
+    @logger.debug { "transcribe_diarized: response=#{response.inspect}" }
     handle_response(response)
   end
 
@@ -55,6 +55,7 @@ class OpenAIClient
         timestamp_granularities: ['word']
       }
     )
+    @logger.debug { "transcribe_with_disfluencies: response=#{response.inspect}" }
     handle_response(response)
   end
 
@@ -68,6 +69,7 @@ class OpenAIClient
         response_format: 'verbose_json'
       }
     )
+    @logger.debug { "translate_to_english: response=#{response.inspect}" }
     handle_response(response)
   end
 
