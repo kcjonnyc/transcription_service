@@ -31,7 +31,7 @@ RSpec.describe Strategies::MerchantBuyerStrategy do
     it 'calls transcribe_diarized on the client' do
       strategy.transcribe(file, filename)
 
-      expect(client).to have_received(:transcribe_diarized).with(file, filename)
+      expect(client).to have_received(:transcribe_diarized).with(file)
     end
 
     it 'returns a hash with mode set to merchant_buyer' do
@@ -137,7 +137,7 @@ RSpec.describe Strategies::MerchantBuyerStrategy do
       it 'calls translate_to_english on the client' do
         strategy.transcribe(file, filename, translate: true)
 
-        expect(client).to have_received(:translate_to_english).with(file, filename)
+        expect(client).to have_received(:translate_to_english).with(file)
       end
 
       it 'includes the translation text in the result' do

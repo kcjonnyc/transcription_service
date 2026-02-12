@@ -137,8 +137,8 @@ RSpec.describe TranscriptionApp do
 
       before do
         allow(mock_audio).to receive(:transcribe).and_return(disfluency_response)
-        allow(RegexDisfluencyAnalyzer).to receive(:analyze).and_return(regex_analyzer_result)
-        allow(LlmDisfluencyAnalyzer).to receive(:analyze).and_return(llm_analyzer_result)
+        allow_any_instance_of(RegexDisfluencyAnalyzer).to receive(:analyze).and_return(regex_analyzer_result)
+        allow_any_instance_of(LlmDisfluencyAnalyzer).to receive(:analyze).and_return(llm_analyzer_result)
       end
 
       it 'returns 200 with disfluency analysis result' do

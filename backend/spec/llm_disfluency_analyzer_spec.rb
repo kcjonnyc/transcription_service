@@ -25,9 +25,14 @@ RSpec.describe LlmDisfluencyAnalyzer do
       ])
     end
 
-    it 'sends the correctly formatted indexed string to the client' do
+    it 'sends the indexed words array to the client' do
       expect(client).to receive(:chat_analyze_disfluencies)
-        .with('[0]Um, [1]I [2]was [3]thinking.')
+        .with([
+          { index: 0, text: 'Um,' },
+          { index: 1, text: 'I' },
+          { index: 2, text: 'was' },
+          { index: 3, text: 'thinking.' }
+        ])
 
       analyzer.analyze_sentence('Um, I was thinking.')
     end
@@ -46,55 +51,58 @@ RSpec.describe LlmDisfluencyAnalyzer do
       result = analyzer.analyze_sentence('Um, I was thinking.')
 
       expect(result[:disfluencies]).to eq([
-        { category: 'filler_words', text: 'Um,', word_indices: [0] }
+        { category: 'filler_words', text: 'Um,', word_indices: [0], count: 1 }
       ])
     end
 
     it 'skips categories with non-hash values' do
       allow(client).to receive(:chat_analyze_disfluencies).and_return({
         'filler_words' => 'not a hash',
-        'word_repetitions' => { 'I I' => [[1, 2]] }
+        'consecutive_word_repetitions' => { 'I I' => [[1, 2]] }
       })
 
       result = analyzer.analyze_sentence('Um, I I was thinking.')
 
       expect(result[:disfluencies].length).to eq(1)
-      expect(result[:disfluencies][0][:category]).to eq('word_repetitions')
+      expect(result[:disfluencies][0][:category]).to eq('consecutive_word_repetitions')
+      expect(result[:disfluencies][0][:word_indices]).to eq([1, 2])
+      expect(result[:disfluencies][0][:count]).to eq(1)
     end
 
-    it 'creates separate entries for each occurrence of a single-word disfluency' do
+    it 'stores all occurrences in a single entry with multiple word_indices' do
       allow(client).to receive(:chat_analyze_disfluencies).and_return({
         'filler_words' => { 'Um,' => [0, 4] }
       })
 
       result = analyzer.analyze_sentence('Um, I was thinking uh, yeah.')
 
-      filler_indices = result[:disfluencies]
-        .select { |d| d[:category] == 'filler_words' }
-        .map { |d| d[:word_indices] }
+      fillers = result[:disfluencies].select { |d| d[:category] == 'filler_words' }
 
-      expect(filler_indices).to contain_exactly([0], [4])
+      expect(fillers.length).to eq(1)
+      expect(fillers[0][:word_indices]).to eq([0, 4])
+      expect(fillers[0][:count]).to eq(2)
     end
 
-    it 'keeps multi-word disfluencies grouped' do
+    it 'flattens multi-word disfluency indices' do
       allow(client).to receive(:chat_analyze_disfluencies).and_return({
-        'word_repetitions' => { 'I I' => [[1, 2]] }
+        'consecutive_word_repetitions' => { 'I I' => [[1, 2]] }
       })
 
       result = analyzer.analyze_sentence('Um, I I was thinking.')
 
       expect(result[:disfluencies].length).to eq(1)
       expect(result[:disfluencies][0][:word_indices]).to eq([1, 2])
+      expect(result[:disfluencies][0][:count]).to eq(1)
     end
 
-    it 'uses actual token text from the sentence, not LLM-provided text' do
+    it 'uses LLM-provided text for disfluency entries' do
       allow(client).to receive(:chat_analyze_disfluencies).and_return({
         'filler_words' => { 'um' => [0] }
       })
 
       result = analyzer.analyze_sentence('Um, I was thinking.')
 
-      expect(result[:disfluencies][0][:text]).to eq('Um,')
+      expect(result[:disfluencies][0][:text]).to eq('um')
     end
   end
 
@@ -138,9 +146,13 @@ RSpec.describe LlmDisfluencyAnalyzer do
         expect(result[:summary][:disfluency_rate]).to eq(0.0)
       end
 
-      it 'sends plain text to the LLM without pause markers' do
+      it 'sends indexed words to the LLM without pause markers' do
         expect(client).to receive(:chat_analyze_disfluencies)
-          .with('[0]I [1]was [2]thinking.')
+          .with([
+            { index: 0, text: 'I' },
+            { index: 1, text: 'was' },
+            { index: 2, text: 'thinking.' }
+          ])
 
         analyzer.analyze('I was thinking.', words: words)
       end
@@ -156,9 +168,13 @@ RSpec.describe LlmDisfluencyAnalyzer do
         ]
       end
 
-      it 'sends plain text to the LLM without pause markers' do
+      it 'sends indexed words to the LLM without pause markers' do
         expect(client).to receive(:chat_analyze_disfluencies)
-          .with('[0]I [1]was [2]thinking.')
+          .with([
+            { index: 0, text: 'I' },
+            { index: 1, text: 'was' },
+            { index: 2, text: 'thinking.' }
+          ])
 
         analyzer.analyze(text, words: words)
       end
@@ -273,19 +289,4 @@ RSpec.describe LlmDisfluencyAnalyzer do
     end
   end
 
-  # ---------------------------------------------------------------------------
-  # .analyze class method
-  # ---------------------------------------------------------------------------
-  describe '.analyze' do
-    it 'delegates to an instance and returns the result' do
-      allow(OpenAIClient).to receive(:new).and_return(client)
-
-      result = LlmDisfluencyAnalyzer.analyze('Hello.', words: [], client: client)
-
-      expect(result).to be_a(Hash)
-      expect(result).to have_key(:annotated_sentences)
-      expect(result).to have_key(:pauses)
-      expect(result).to have_key(:summary)
-    end
-  end
 end

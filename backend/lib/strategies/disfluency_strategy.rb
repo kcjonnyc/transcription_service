@@ -3,7 +3,7 @@
 module Strategies
   class DisfluencyStrategy < TranscriptionStrategy
     def transcribe(file, filename, translate: false, **_options)
-      response = @client.transcribe_with_disfluencies(file, filename)
+      response = @client.transcribe_with_disfluencies(file)
       text = response['text']
       words = response['words'] || []
 
@@ -11,8 +11,8 @@ module Strategies
         mode: 'disfluency',
         full_text: text,
         words: words,
-        regex_analysis: RegexDisfluencyAnalyzer.analyze(text, words: words),
-        llm_analysis: LlmDisfluencyAnalyzer.analyze(text, words: words, client: @client)
+        regex_analysis: RegexDisfluencyAnalyzer.new.analyze(text, words: words),
+        llm_analysis: LlmDisfluencyAnalyzer.new(client: @client).analyze(text, words: words)
       }
     end
   end

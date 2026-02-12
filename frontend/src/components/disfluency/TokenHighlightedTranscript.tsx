@@ -9,7 +9,7 @@ interface TokenHighlightedTranscriptProps {
 
 const CATEGORY_COLORS: Record<string, { bg: string; label: string }> = {
   filler_words: { bg: '#fef3c7', label: 'Filler Word' },
-  word_repetitions: { bg: '#fed7aa', label: 'Word Repetition' },
+  consecutive_word_repetitions: { bg: '#fed7aa', label: 'Word Repetition' },
   sound_repetitions: { bg: '#fecaca', label: 'Sound Repetition (Stutter)' },
   prolongations: { bg: '#e9d5ff', label: 'Prolongation' },
   revisions: { bg: '#bfdbfe', label: 'Revision' },

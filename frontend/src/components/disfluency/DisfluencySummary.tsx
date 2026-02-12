@@ -6,7 +6,7 @@ interface DisfluencySummaryProps {
 
 const CATEGORY_DISPLAY_NAMES: Record<string, string> = {
   filler_words: 'Filler Words',
-  word_repetitions: 'Word Repetitions',
+  consecutive_word_repetitions: 'Word Repetitions',
   sound_repetitions: 'Sound Repetitions (Stuttering)',
   prolongations: 'Prolongations',
   revisions: 'Revisions',

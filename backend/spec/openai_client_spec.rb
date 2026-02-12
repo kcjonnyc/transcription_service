@@ -3,7 +3,7 @@
 require 'spec_helper'
 
 RSpec.describe OpenAIClient do
-  let(:client) { described_class.new }
+  let(:client) { described_class.new(logger: Logger.new(File::NULL)) }
   let(:file) { File.open(File.join(__dir__, 'fixtures', 'test.mp3')) }
   let(:filename) { 'test.mp3' }
   let(:mock_audio) { instance_double(OpenAI::Audio) }
@@ -45,25 +45,25 @@ RSpec.describe OpenAIClient do
       expect(mock_audio).to receive(:transcribe).with(
         parameters: hash_including(model: 'gpt-4o-transcribe')
       )
-      client.transcribe_diarized(file, filename)
+      client.transcribe_diarized(file)
     end
 
     it 'includes logprobs in the include parameter' do
       expect(mock_audio).to receive(:transcribe).with(
         parameters: hash_including(include: ['logprobs'])
       )
-      client.transcribe_diarized(file, filename)
+      client.transcribe_diarized(file)
     end
 
     it 'requests verbose_json response format' do
       expect(mock_audio).to receive(:transcribe).with(
         parameters: hash_including(response_format: 'verbose_json')
       )
-      client.transcribe_diarized(file, filename)
+      client.transcribe_diarized(file)
     end
 
     it 'returns parsed response hash' do
-      result = client.transcribe_diarized(file, filename)
+      result = client.transcribe_diarized(file)
 
       expect(result).to be_a(Hash)
       expect(result['text']).to eq('Hello how can I help you?')
@@ -78,7 +78,7 @@ RSpec.describe OpenAIClient do
       end
 
       it 'raises OpenAIClient::ApiError' do
-        expect { client.transcribe_diarized(file, filename) }
+        expect { client.transcribe_diarized(file) }
           .to raise_error(OpenAIClient::ApiError, /Unauthorized/)
       end
     end
@@ -102,25 +102,25 @@ RSpec.describe OpenAIClient do
       expect(mock_audio).to receive(:transcribe).with(
         parameters: hash_including(model: 'whisper-1')
       )
-      client.transcribe_with_disfluencies(file, filename)
+      client.transcribe_with_disfluencies(file)
     end
 
     it 'includes a disfluency prompt' do
       expect(mock_audio).to receive(:transcribe).with(
         parameters: hash_including(prompt: a_string_including('Um, uh, hmm'))
       )
-      client.transcribe_with_disfluencies(file, filename)
+      client.transcribe_with_disfluencies(file)
     end
 
     it 'requests verbose_json response format' do
       expect(mock_audio).to receive(:transcribe).with(
         parameters: hash_including(response_format: 'verbose_json')
       )
-      client.transcribe_with_disfluencies(file, filename)
+      client.transcribe_with_disfluencies(file)
     end
 
     it 'returns parsed response hash' do
-      result = client.transcribe_with_disfluencies(file, filename)
+      result = client.transcribe_with_disfluencies(file)
 
       expect(result).to be_a(Hash)
       expect(result['text']).to eq('Um, I was, uh, thinking about going to the store.')
@@ -134,7 +134,7 @@ RSpec.describe OpenAIClient do
       end
 
       it 'raises OpenAIClient::ApiError' do
-        expect { client.transcribe_with_disfluencies(file, filename) }
+        expect { client.transcribe_with_disfluencies(file) }
           .to raise_error(OpenAIClient::ApiError, /Rate limit exceeded/)
       end
     end
@@ -158,18 +158,18 @@ RSpec.describe OpenAIClient do
       expect(mock_audio).to receive(:translate).with(
         parameters: hash_including(model: 'whisper-1')
       )
-      client.translate_to_english(file, filename)
+      client.translate_to_english(file)
     end
 
     it 'requests verbose_json response format' do
       expect(mock_audio).to receive(:translate).with(
         parameters: hash_including(response_format: 'verbose_json')
       )
-      client.translate_to_english(file, filename)
+      client.translate_to_english(file)
     end
 
     it 'returns parsed response hash' do
-      result = client.translate_to_english(file, filename)
+      result = client.translate_to_english(file)
 
       expect(result).to be_a(Hash)
       expect(result['text']).to eq('Hello, how are you?')
@@ -183,15 +183,29 @@ RSpec.describe OpenAIClient do
       end
 
       it 'raises OpenAIClient::ApiError' do
-        expect { client.translate_to_english(file, filename) }
+        expect { client.translate_to_english(file) }
           .to raise_error(OpenAIClient::ApiError, /Service Unavailable/)
       end
     end
   end
 
+  describe 'model constants' do
+    it 'defines DIARIZATION_MODEL' do
+      expect(described_class::DIARIZATION_MODEL).to eq('gpt-4o-transcribe')
+    end
+
+    it 'defines DISFLUENCY_TRANSCRIPTION_MODEL' do
+      expect(described_class::DISFLUENCY_TRANSCRIPTION_MODEL).to eq('whisper-1')
+    end
+
+    it 'defines CHAT_MODEL' do
+      expect(described_class::CHAT_MODEL).to eq('gpt-4o-mini')
+    end
+  end
+
   describe 'DISFLUENCY_ANALYSIS_PROMPT' do
     it 'includes all disfluency categories' do
-      %w[filler_words word_repetitions sound_repetitions prolongations revisions partial_words].each do |cat|
+      %w[filler_words consecutive_word_repetitions sound_repetitions prolongations revisions partial_words].each do |cat|
         expect(described_class::DISFLUENCY_ANALYSIS_PROMPT).to include("\"#{cat}\"")
       end
     end

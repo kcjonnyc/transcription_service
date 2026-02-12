@@ -3,13 +3,13 @@
 require_relative 'spec_helper'
 
 RSpec.describe RegexDisfluencyAnalyzer do
-  describe '.analyze' do
+  describe '#analyze' do
     # -------------------------------------------------------------------------
     # Category 1: Filler Words
     # -------------------------------------------------------------------------
     context 'filler_words' do
       it 'detects simple fillers like um and uh' do
-        result = RegexDisfluencyAnalyzer.analyze('Um, I was, uh, thinking.')
+        result = RegexDisfluencyAnalyzer.new.analyze('Um, I was, uh, thinking.')
         disfluencies = result[:annotated_sentences][0][:disfluencies]
         fillers = disfluencies.select { |d| d[:category] == 'filler_words' }
 
@@ -19,7 +19,7 @@ RSpec.describe RegexDisfluencyAnalyzer do
       end
 
       it 'detects multi-word fillers like "you know" and "I mean"' do
-        result = RegexDisfluencyAnalyzer.analyze('You know, I mean, it was fine.')
+        result = RegexDisfluencyAnalyzer.new.analyze('You know, I mean, it was fine.')
         disfluencies = result[:annotated_sentences][0][:disfluencies]
         fillers = disfluencies.select { |d| d[:category] == 'filler_words' }
 
@@ -29,7 +29,7 @@ RSpec.describe RegexDisfluencyAnalyzer do
       end
 
       it 'detects basically, actually, literally as fillers' do
-        result = RegexDisfluencyAnalyzer.analyze('Basically, I actually literally went there.')
+        result = RegexDisfluencyAnalyzer.new.analyze('Basically, I actually literally went there.')
         disfluencies = result[:annotated_sentences][0][:disfluencies]
         fillers = disfluencies.select { |d| d[:category] == 'filler_words' }
 
@@ -40,7 +40,7 @@ RSpec.describe RegexDisfluencyAnalyzer do
       end
 
       it 'detects "like" as filler only when surrounded by commas or at start of sentence' do
-        result = RegexDisfluencyAnalyzer.analyze('Like, I was, like, going to the store.')
+        result = RegexDisfluencyAnalyzer.new.analyze('Like, I was, like, going to the store.')
         disfluencies = result[:annotated_sentences][0][:disfluencies]
         fillers = disfluencies.select { |d| d[:category] == 'filler_words' }
         like_fillers = fillers.select { |f| f[:text].downcase == 'like' }
@@ -49,7 +49,7 @@ RSpec.describe RegexDisfluencyAnalyzer do
       end
 
       it 'does NOT flag "like" when used normally (e.g., "I like cats")' do
-        result = RegexDisfluencyAnalyzer.analyze('I like cats.')
+        result = RegexDisfluencyAnalyzer.new.analyze('I like cats.')
         disfluencies = result[:annotated_sentences][0][:disfluencies]
         fillers = disfluencies.select { |d| d[:category] == 'filler_words' }
         like_fillers = fillers.select { |f| f[:text].downcase == 'like' }
@@ -58,7 +58,7 @@ RSpec.describe RegexDisfluencyAnalyzer do
       end
 
       it 'detects "right" as filler when used as filler' do
-        result = RegexDisfluencyAnalyzer.analyze('So, right, we need to go.')
+        result = RegexDisfluencyAnalyzer.new.analyze('So, right, we need to go.')
         disfluencies = result[:annotated_sentences][0][:disfluencies]
         fillers = disfluencies.select { |d| d[:category] == 'filler_words' }
         right_fillers = fillers.select { |f| f[:text].downcase == 'right' }
@@ -67,7 +67,7 @@ RSpec.describe RegexDisfluencyAnalyzer do
       end
 
       it 'detects hmm as a filler' do
-        result = RegexDisfluencyAnalyzer.analyze('Hmm, I am not sure about that.')
+        result = RegexDisfluencyAnalyzer.new.analyze('Hmm, I am not sure about that.')
         disfluencies = result[:annotated_sentences][0][:disfluencies]
         fillers = disfluencies.select { |d| d[:category] == 'filler_words' }
 
@@ -76,7 +76,7 @@ RSpec.describe RegexDisfluencyAnalyzer do
       end
 
       it 'reports correct position and length for fillers' do
-        result = RegexDisfluencyAnalyzer.analyze('Um, hello.')
+        result = RegexDisfluencyAnalyzer.new.analyze('Um, hello.')
         disfluencies = result[:annotated_sentences][0][:disfluencies]
         filler = disfluencies.find { |d| d[:category] == 'filler_words' }
 
@@ -88,29 +88,29 @@ RSpec.describe RegexDisfluencyAnalyzer do
     # -------------------------------------------------------------------------
     # Category 2: Word Repetitions
     # -------------------------------------------------------------------------
-    context 'word_repetitions' do
+    context 'consecutive_word_repetitions' do
       it 'detects consecutive repeated words like "I I"' do
-        result = RegexDisfluencyAnalyzer.analyze('I I I went to the store.')
+        result = RegexDisfluencyAnalyzer.new.analyze('I I I went to the store.')
         disfluencies = result[:annotated_sentences][0][:disfluencies]
-        reps = disfluencies.select { |d| d[:category] == 'word_repetitions' }
+        reps = disfluencies.select { |d| d[:category] == 'consecutive_word_repetitions' }
 
         expect(reps.length).to be >= 1
         expect(reps[0][:text].downcase).to include('i i')
       end
 
       it 'detects "the the" as a word repetition' do
-        result = RegexDisfluencyAnalyzer.analyze('I went to the the store.')
+        result = RegexDisfluencyAnalyzer.new.analyze('I went to the the store.')
         disfluencies = result[:annotated_sentences][0][:disfluencies]
-        reps = disfluencies.select { |d| d[:category] == 'word_repetitions' }
+        reps = disfluencies.select { |d| d[:category] == 'consecutive_word_repetitions' }
 
         expect(reps.length).to eq(1)
         expect(reps[0][:text].downcase).to include('the the')
       end
 
       it 'reports correct position and length for word repetitions' do
-        result = RegexDisfluencyAnalyzer.analyze('Go to the the store.')
+        result = RegexDisfluencyAnalyzer.new.analyze('Go to the the store.')
         disfluencies = result[:annotated_sentences][0][:disfluencies]
-        rep = disfluencies.find { |d| d[:category] == 'word_repetitions' }
+        rep = disfluencies.find { |d| d[:category] == 'consecutive_word_repetitions' }
 
         expect(rep[:position]).to eq(6)
         expect(rep[:length]).to eq(7) # "the the"
@@ -122,7 +122,7 @@ RSpec.describe RegexDisfluencyAnalyzer do
     # -------------------------------------------------------------------------
     context 'sound_repetitions' do
       it 'detects stutter patterns like "b- but"' do
-        result = RegexDisfluencyAnalyzer.analyze('I was b- but I went anyway.')
+        result = RegexDisfluencyAnalyzer.new.analyze('I was b- but I went anyway.')
         disfluencies = result[:annotated_sentences][0][:disfluencies]
         stutters = disfluencies.select { |d| d[:category] == 'sound_repetitions' }
 
@@ -131,7 +131,7 @@ RSpec.describe RegexDisfluencyAnalyzer do
       end
 
       it 'detects "wh- what" as a sound repetition' do
-        result = RegexDisfluencyAnalyzer.analyze('I said wh- what do you mean.')
+        result = RegexDisfluencyAnalyzer.new.analyze('I said wh- what do you mean.')
         disfluencies = result[:annotated_sentences][0][:disfluencies]
         stutters = disfluencies.select { |d| d[:category] == 'sound_repetitions' }
 
@@ -140,7 +140,7 @@ RSpec.describe RegexDisfluencyAnalyzer do
       end
 
       it 'detects "s- so" as a sound repetition' do
-        result = RegexDisfluencyAnalyzer.analyze('S- so I went home.')
+        result = RegexDisfluencyAnalyzer.new.analyze('S- so I went home.')
         disfluencies = result[:annotated_sentences][0][:disfluencies]
         stutters = disfluencies.select { |d| d[:category] == 'sound_repetitions' }
 
@@ -149,7 +149,7 @@ RSpec.describe RegexDisfluencyAnalyzer do
       end
 
       it 'reports correct position and length for sound repetitions' do
-        result = RegexDisfluencyAnalyzer.analyze('I was b- but fine.')
+        result = RegexDisfluencyAnalyzer.new.analyze('I was b- but fine.')
         disfluencies = result[:annotated_sentences][0][:disfluencies]
         stutter = disfluencies.find { |d| d[:category] == 'sound_repetitions' }
 
@@ -163,7 +163,7 @@ RSpec.describe RegexDisfluencyAnalyzer do
     # -------------------------------------------------------------------------
     context 'prolongations' do
       it 'detects words with 3+ consecutive repeated characters like "sooo"' do
-        result = RegexDisfluencyAnalyzer.analyze('Sooo I went to the store.')
+        result = RegexDisfluencyAnalyzer.new.analyze('Sooo I went to the store.')
         disfluencies = result[:annotated_sentences][0][:disfluencies]
         prolongations = disfluencies.select { |d| d[:category] == 'prolongations' }
 
@@ -172,7 +172,7 @@ RSpec.describe RegexDisfluencyAnalyzer do
       end
 
       it 'detects "wellll" as a prolongation' do
-        result = RegexDisfluencyAnalyzer.analyze('Wellll that was interesting.')
+        result = RegexDisfluencyAnalyzer.new.analyze('Wellll that was interesting.')
         disfluencies = result[:annotated_sentences][0][:disfluencies]
         prolongations = disfluencies.select { |d| d[:category] == 'prolongations' }
 
@@ -181,7 +181,7 @@ RSpec.describe RegexDisfluencyAnalyzer do
       end
 
       it 'detects "ummmm" as a prolongation' do
-        result = RegexDisfluencyAnalyzer.analyze('Ummmm, I think so.')
+        result = RegexDisfluencyAnalyzer.new.analyze('Ummmm, I think so.')
         disfluencies = result[:annotated_sentences][0][:disfluencies]
         prolongations = disfluencies.select { |d| d[:category] == 'prolongations' }
 
@@ -189,7 +189,7 @@ RSpec.describe RegexDisfluencyAnalyzer do
       end
 
       it 'does NOT flag normal words with double letters like "book" or "see"' do
-        result = RegexDisfluencyAnalyzer.analyze('I see the book.')
+        result = RegexDisfluencyAnalyzer.new.analyze('I see the book.')
         disfluencies = result[:annotated_sentences][0][:disfluencies]
         prolongations = disfluencies.select { |d| d[:category] == 'prolongations' }
 
@@ -197,7 +197,7 @@ RSpec.describe RegexDisfluencyAnalyzer do
       end
 
       it 'reports correct position and length for prolongations' do
-        result = RegexDisfluencyAnalyzer.analyze('I was sooo tired.')
+        result = RegexDisfluencyAnalyzer.new.analyze('I was sooo tired.')
         disfluencies = result[:annotated_sentences][0][:disfluencies]
         prolongation = disfluencies.find { |d| d[:category] == 'prolongations' }
 
@@ -211,7 +211,7 @@ RSpec.describe RegexDisfluencyAnalyzer do
     # -------------------------------------------------------------------------
     context 'revisions' do
       it 'detects self-corrections with double-dash like "I was going-- I went"' do
-        result = RegexDisfluencyAnalyzer.analyze('I was going-- I went to the park.')
+        result = RegexDisfluencyAnalyzer.new.analyze('I was going-- I went to the park.')
         disfluencies = result[:annotated_sentences][0][:disfluencies]
         revisions = disfluencies.select { |d| d[:category] == 'revisions' }
 
@@ -220,7 +220,7 @@ RSpec.describe RegexDisfluencyAnalyzer do
       end
 
       it 'detects "the red-- blue car" as a revision' do
-        result = RegexDisfluencyAnalyzer.analyze('I saw the red-- blue car.')
+        result = RegexDisfluencyAnalyzer.new.analyze('I saw the red-- blue car.')
         disfluencies = result[:annotated_sentences][0][:disfluencies]
         revisions = disfluencies.select { |d| d[:category] == 'revisions' }
 
@@ -231,7 +231,7 @@ RSpec.describe RegexDisfluencyAnalyzer do
       it 'reports correct position and length for revisions' do
         # "I was going-- I went to the park."
         #  0123456
-        result = RegexDisfluencyAnalyzer.analyze('I was going-- I went to the park.')
+        result = RegexDisfluencyAnalyzer.new.analyze('I was going-- I went to the park.')
         disfluencies = result[:annotated_sentences][0][:disfluencies]
         revision = disfluencies.find { |d| d[:category] == 'revisions' }
 
@@ -245,7 +245,7 @@ RSpec.describe RegexDisfluencyAnalyzer do
     # -------------------------------------------------------------------------
     context 'partial_words' do
       it 'detects words ending with a single hyphen like "gon-"' do
-        result = RegexDisfluencyAnalyzer.analyze('I was gon- going to the store.')
+        result = RegexDisfluencyAnalyzer.new.analyze('I was gon- going to the store.')
         disfluencies = result[:annotated_sentences][0][:disfluencies]
         partials = disfluencies.select { |d| d[:category] == 'partial_words' }
 
@@ -254,7 +254,7 @@ RSpec.describe RegexDisfluencyAnalyzer do
       end
 
       it 'detects "thi-" as a partial word' do
-        result = RegexDisfluencyAnalyzer.analyze('I was thi- thinking about it.')
+        result = RegexDisfluencyAnalyzer.new.analyze('I was thi- thinking about it.')
         disfluencies = result[:annotated_sentences][0][:disfluencies]
         partials = disfluencies.select { |d| d[:category] == 'partial_words' }
 
@@ -263,7 +263,7 @@ RSpec.describe RegexDisfluencyAnalyzer do
       end
 
       it 'detects "beca-" as a partial word' do
-        result = RegexDisfluencyAnalyzer.analyze('It was beca- because of the rain.')
+        result = RegexDisfluencyAnalyzer.new.analyze('It was beca- because of the rain.')
         disfluencies = result[:annotated_sentences][0][:disfluencies]
         partials = disfluencies.select { |d| d[:category] == 'partial_words' }
 
@@ -272,7 +272,7 @@ RSpec.describe RegexDisfluencyAnalyzer do
       end
 
       it 'does NOT flag stutter patterns as partial words' do
-        result = RegexDisfluencyAnalyzer.analyze('I was b- but fine.')
+        result = RegexDisfluencyAnalyzer.new.analyze('I was b- but fine.')
         disfluencies = result[:annotated_sentences][0][:disfluencies]
         partials = disfluencies.select { |d| d[:category] == 'partial_words' }
 
@@ -280,7 +280,7 @@ RSpec.describe RegexDisfluencyAnalyzer do
       end
 
       it 'reports correct position and length for partial words' do
-        result = RegexDisfluencyAnalyzer.analyze('I was gon- going.')
+        result = RegexDisfluencyAnalyzer.new.analyze('I was gon- going.')
         disfluencies = result[:annotated_sentences][0][:disfluencies]
         partial = disfluencies.find { |d| d[:category] == 'partial_words' }
 
@@ -294,14 +294,14 @@ RSpec.describe RegexDisfluencyAnalyzer do
     # -------------------------------------------------------------------------
     context 'struggle_score' do
       it 'returns 0 for clean sentences with no disfluencies' do
-        result = RegexDisfluencyAnalyzer.analyze('The weather is nice today.')
+        result = RegexDisfluencyAnalyzer.new.analyze('The weather is nice today.')
         score = result[:annotated_sentences][0][:struggle_score]
 
         expect(score).to eq(0.0)
       end
 
       it 'returns a positive score for sentences with fillers' do
-        result = RegexDisfluencyAnalyzer.analyze('Um, uh, I went there.')
+        result = RegexDisfluencyAnalyzer.new.analyze('Um, uh, I went there.')
         score = result[:annotated_sentences][0][:struggle_score]
 
         expect(score).to be > 0
@@ -310,8 +310,8 @@ RSpec.describe RegexDisfluencyAnalyzer do
 
       it 'weights higher-weight categories more heavily' do
         # sound_repetitions have weight 2 vs filler_words weight 1
-        filler_result = RegexDisfluencyAnalyzer.analyze('Um, I went to the store today please.')
-        stutter_result = RegexDisfluencyAnalyzer.analyze('B- but I went to the store today please.')
+        filler_result = RegexDisfluencyAnalyzer.new.analyze('Um, I went to the store today please.')
+        stutter_result = RegexDisfluencyAnalyzer.new.analyze('B- but I went to the store today please.')
 
         filler_score = filler_result[:annotated_sentences][0][:struggle_score]
         stutter_score = stutter_result[:annotated_sentences][0][:struggle_score]
@@ -323,7 +323,7 @@ RSpec.describe RegexDisfluencyAnalyzer do
 
       it 'caps the score at 100' do
         # A sentence that is almost entirely disfluencies
-        result = RegexDisfluencyAnalyzer.analyze('Um, uh, um, uh, um.')
+        result = RegexDisfluencyAnalyzer.new.analyze('Um, uh, um, uh, um.')
         score = result[:annotated_sentences][0][:struggle_score]
 
         expect(score).to be <= 100.0
@@ -332,14 +332,14 @@ RSpec.describe RegexDisfluencyAnalyzer do
       it 'calculates score as (sum of weighted disfluencies / total words) * 100' do
         # "Um, I went." => 3 words, 1 filler (weight 1)
         # score = (1 / 3) * 100 = 33.33...
-        result = RegexDisfluencyAnalyzer.analyze('Um, I went.')
+        result = RegexDisfluencyAnalyzer.new.analyze('Um, I went.')
         score = result[:annotated_sentences][0][:struggle_score]
 
         expect(score).to be_within(1.0).of(33.3)
       end
 
       it 'returns a Float' do
-        result = RegexDisfluencyAnalyzer.analyze('Hello there.')
+        result = RegexDisfluencyAnalyzer.new.analyze('Hello there.')
         score = result[:annotated_sentences][0][:struggle_score]
 
         expect(score).to be_a(Float)
@@ -351,14 +351,14 @@ RSpec.describe RegexDisfluencyAnalyzer do
     # -------------------------------------------------------------------------
     context 'summary' do
       it 'includes total_disfluencies count' do
-        result = RegexDisfluencyAnalyzer.analyze('Um, I went. Uh, yeah.')
+        result = RegexDisfluencyAnalyzer.new.analyze('Um, I went. Uh, yeah.')
         summary = result[:summary]
 
         expect(summary[:total_disfluencies]).to be >= 2
       end
 
       it 'calculates disfluency_rate as disfluencies per 100 words' do
-        result = RegexDisfluencyAnalyzer.analyze('Um, I went to the store and uh I bought things.')
+        result = RegexDisfluencyAnalyzer.new.analyze('Um, I went to the store and uh I bought things.')
         summary = result[:summary]
 
         expect(summary[:disfluency_rate]).to be_a(Float)
@@ -366,7 +366,7 @@ RSpec.describe RegexDisfluencyAnalyzer do
       end
 
       it 'includes by_category with count and examples' do
-        result = RegexDisfluencyAnalyzer.analyze('Um, I mean, basically it was, uh, fine.')
+        result = RegexDisfluencyAnalyzer.new.analyze('Um, I mean, basically it was, uh, fine.')
         summary = result[:summary]
 
         expect(summary[:by_category]).to be_a(Hash)
@@ -378,7 +378,7 @@ RSpec.describe RegexDisfluencyAnalyzer do
       end
 
       it 'includes most_common_fillers hash' do
-        result = RegexDisfluencyAnalyzer.analyze('Um, I went. Um, yeah. Uh, really. Um, ok.')
+        result = RegexDisfluencyAnalyzer.new.analyze('Um, I went. Um, yeah. Uh, really. Um, ok.')
         summary = result[:summary]
 
         expect(summary[:most_common_fillers]).to be_a(Hash)
@@ -386,14 +386,14 @@ RSpec.describe RegexDisfluencyAnalyzer do
       end
 
       it 'limits most_common_fillers to top 10' do
-        result = RegexDisfluencyAnalyzer.analyze('Um, I went there.')
+        result = RegexDisfluencyAnalyzer.new.analyze('Um, I went there.')
         summary = result[:summary]
 
         expect(summary[:most_common_fillers].length).to be <= 10
       end
 
       it 'limits examples in by_category to 5' do
-        result = RegexDisfluencyAnalyzer.analyze(
+        result = RegexDisfluencyAnalyzer.new.analyze(
           'Um, uh, hmm, basically, actually, literally, I mean, you know, right, it was fine.'
         )
         summary = result[:summary]
@@ -403,7 +403,7 @@ RSpec.describe RegexDisfluencyAnalyzer do
       end
 
       it 'returns zero stats for text with no disfluencies' do
-        result = RegexDisfluencyAnalyzer.analyze('The weather is nice. I like it.')
+        result = RegexDisfluencyAnalyzer.new.analyze('The weather is nice. I like it.')
         summary = result[:summary]
 
         expect(summary[:total_disfluencies]).to eq(0)
@@ -417,7 +417,7 @@ RSpec.describe RegexDisfluencyAnalyzer do
     # -------------------------------------------------------------------------
     context 'with clean text' do
       it 'returns empty disfluencies arrays' do
-        result = RegexDisfluencyAnalyzer.analyze('I went to the store. The weather was nice.')
+        result = RegexDisfluencyAnalyzer.new.analyze('I went to the store. The weather was nice.')
 
         result[:annotated_sentences].each do |sentence|
           expect(sentence[:disfluencies]).to eq([])
@@ -425,12 +425,12 @@ RSpec.describe RegexDisfluencyAnalyzer do
       end
 
       it 'returns zero struggle scores' do
-        result = RegexDisfluencyAnalyzer.analyze('The sun is shining.')
+        result = RegexDisfluencyAnalyzer.new.analyze('The sun is shining.')
         expect(result[:annotated_sentences][0][:struggle_score]).to eq(0.0)
       end
 
       it 'preserves the original sentence text' do
-        result = RegexDisfluencyAnalyzer.analyze('Hello world.')
+        result = RegexDisfluencyAnalyzer.new.analyze('Hello world.')
         expect(result[:annotated_sentences][0][:text]).to eq('Hello world.')
       end
     end
@@ -440,13 +440,13 @@ RSpec.describe RegexDisfluencyAnalyzer do
     # -------------------------------------------------------------------------
     context 'with multi-sentence text' do
       it 'splits text into multiple annotated sentences' do
-        result = RegexDisfluencyAnalyzer.analyze('I went home. You stayed. They left!')
+        result = RegexDisfluencyAnalyzer.new.analyze('I went home. You stayed. They left!')
 
         expect(result[:annotated_sentences].length).to eq(3)
       end
 
       it 'analyzes each sentence independently' do
-        result = RegexDisfluencyAnalyzer.analyze('Um, I went. The weather was nice.')
+        result = RegexDisfluencyAnalyzer.new.analyze('Um, I went. The weather was nice.')
 
         first = result[:annotated_sentences][0]
         second = result[:annotated_sentences][1]
@@ -456,14 +456,14 @@ RSpec.describe RegexDisfluencyAnalyzer do
       end
 
       it 'aggregates disfluencies across sentences in summary' do
-        result = RegexDisfluencyAnalyzer.analyze('Um, I went. Uh, yeah. Hmm, ok.')
+        result = RegexDisfluencyAnalyzer.new.analyze('Um, I went. Uh, yeah. Hmm, ok.')
         summary = result[:summary]
 
         expect(summary[:total_disfluencies]).to be >= 3
       end
 
       it 'splits on period, exclamation mark, and question mark' do
-        result = RegexDisfluencyAnalyzer.analyze('Hello. How are you? Great!')
+        result = RegexDisfluencyAnalyzer.new.analyze('Hello. How are you? Great!')
 
         expect(result[:annotated_sentences].length).to eq(3)
       end
@@ -474,7 +474,7 @@ RSpec.describe RegexDisfluencyAnalyzer do
     # -------------------------------------------------------------------------
     context 'return structure' do
       it 'returns a hash with :annotated_sentences and :summary keys' do
-        result = RegexDisfluencyAnalyzer.analyze('Hello there.')
+        result = RegexDisfluencyAnalyzer.new.analyze('Hello there.')
 
         expect(result).to be_a(Hash)
         expect(result).to have_key(:annotated_sentences)
@@ -482,7 +482,7 @@ RSpec.describe RegexDisfluencyAnalyzer do
       end
 
       it 'each annotated sentence has :text, :disfluencies, :struggle_score' do
-        result = RegexDisfluencyAnalyzer.analyze('Um, hello.')
+        result = RegexDisfluencyAnalyzer.new.analyze('Um, hello.')
         sentence = result[:annotated_sentences][0]
 
         expect(sentence).to have_key(:text)
@@ -491,7 +491,7 @@ RSpec.describe RegexDisfluencyAnalyzer do
       end
 
       it 'each disfluency has :category, :text, :position, :length' do
-        result = RegexDisfluencyAnalyzer.analyze('Um, hello.')
+        result = RegexDisfluencyAnalyzer.new.analyze('Um, hello.')
         disfluency = result[:annotated_sentences][0][:disfluencies][0]
 
         expect(disfluency).to have_key(:category)
@@ -501,7 +501,7 @@ RSpec.describe RegexDisfluencyAnalyzer do
       end
 
       it 'summary has :total_disfluencies, :disfluency_rate, :by_category, :most_common_fillers' do
-        result = RegexDisfluencyAnalyzer.analyze('Hello there.')
+        result = RegexDisfluencyAnalyzer.new.analyze('Hello there.')
         summary = result[:summary]
 
         expect(summary).to have_key(:total_disfluencies)
@@ -517,19 +517,19 @@ RSpec.describe RegexDisfluencyAnalyzer do
     context 'with mixed disfluencies' do
       it 'detects multiple categories in a single sentence' do
         text = 'Um, I I was, like, b- but sooo tired.'
-        result = RegexDisfluencyAnalyzer.analyze(text)
+        result = RegexDisfluencyAnalyzer.new.analyze(text)
         disfluencies = result[:annotated_sentences][0][:disfluencies]
 
         categories = disfluencies.map { |d| d[:category] }.uniq
         expect(categories).to include('filler_words')
-        expect(categories).to include('word_repetitions')
+        expect(categories).to include('consecutive_word_repetitions')
         expect(categories).to include('sound_repetitions')
         expect(categories).to include('prolongations')
       end
 
       it 'handles a sentence with revisions and partial words' do
         text = 'I was gon- going-- I went home.'
-        result = RegexDisfluencyAnalyzer.analyze(text)
+        result = RegexDisfluencyAnalyzer.new.analyze(text)
         disfluencies = result[:annotated_sentences][0][:disfluencies]
 
         categories = disfluencies.map { |d| d[:category] }

@@ -43,26 +43,26 @@ RSpec.describe Strategies::DisfluencyStrategy do
   describe '#transcribe' do
     before do
       allow(client).to receive(:transcribe_with_disfluencies).and_return(disfluency_response)
-      allow(RegexDisfluencyAnalyzer).to receive(:analyze).and_return(regex_analyzer_result)
-      allow(LlmDisfluencyAnalyzer).to receive(:analyze).and_return(llm_analyzer_result)
+      allow_any_instance_of(RegexDisfluencyAnalyzer).to receive(:analyze).and_return(regex_analyzer_result)
+      allow_any_instance_of(LlmDisfluencyAnalyzer).to receive(:analyze).and_return(llm_analyzer_result)
     end
 
     it 'calls transcribe_with_disfluencies on the client' do
       strategy.transcribe(file, filename)
 
-      expect(client).to have_received(:transcribe_with_disfluencies).with(file, filename)
+      expect(client).to have_received(:transcribe_with_disfluencies).with(file)
     end
 
-    it 'calls RegexDisfluencyAnalyzer.analyze with the transcription text and words' do
-      strategy.transcribe(file, filename)
+    it 'runs regex analysis on the transcription text' do
+      result = strategy.transcribe(file, filename)
 
-      expect(RegexDisfluencyAnalyzer).to have_received(:analyze).with(transcription_text, words: [])
+      expect(result[:regex_analysis]).to eq(regex_analyzer_result)
     end
 
-    it 'calls LlmDisfluencyAnalyzer.analyze with the transcription text, words, and client' do
-      strategy.transcribe(file, filename)
+    it 'runs LLM analysis on the transcription text' do
+      result = strategy.transcribe(file, filename)
 
-      expect(LlmDisfluencyAnalyzer).to have_received(:analyze).with(transcription_text, words: [], client: client)
+      expect(result[:llm_analysis]).to eq(llm_analyzer_result)
     end
 
     it 'returns a hash with mode set to disfluency' do

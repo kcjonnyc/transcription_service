@@ -3,7 +3,7 @@
 module Strategies
   class MerchantBuyerStrategy < TranscriptionStrategy
     def transcribe(file, filename, translate: false, **_options)
-      response = @client.transcribe_diarized(file, filename)
+      response = @client.transcribe_diarized(file)
 
       segments = parse_segments(response)
       speakers = segments.map { |s| s[:speaker] }.uniq
@@ -18,7 +18,7 @@ module Strategies
       }
 
       if translate
-        translation_response = @client.translate_to_english(file, filename)
+        translation_response = @client.translate_to_english(file)
         result[:translation] = translation_response['text']
       end
 

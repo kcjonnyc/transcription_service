@@ -2,6 +2,7 @@
 
 ENV['RACK_ENV'] = 'test'
 ENV['OPENAI_API_KEY'] ||= 'test-api-key'
+ENV['LOG_LEVEL'] ||= 'FATAL'
 
 require_relative '../config/environment'
 require_relative '../app'
