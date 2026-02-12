@@ -11,7 +11,7 @@ class OpenAIClient
 
   DEFAULT_BASE_URL = 'https://api.openai.com/v1'
 
-  DIARIZATION_MODEL = 'gpt-4o-transcribe-diarize'
+  TRANSCRIPTION_MODEL = 'gpt-4o-transcribe'
   DISFLUENCY_TRANSCRIPTION_MODEL = 'whisper-1'
   CHAT_MODEL = 'gpt-4o-mini'
 
@@ -28,18 +28,17 @@ class OpenAIClient
     @logger = logger || Logger.new($stdout, level: LOG_LEVEL)
   end
 
-  def transcribe_diarized(file)
-    @logger.info { "transcribe_diarized: model=#{DIARIZATION_MODEL}" }
+  def transcribe(file)
+    @logger.info { "transcribe: model=#{TRANSCRIPTION_MODEL}" }
     file.rewind
     response = @client.audio.transcribe(
       parameters: {
         file: file,
-        model: DIARIZATION_MODEL,
-        response_format: 'diarized_json',
-        chunking_strategy: "auto"
+        model: TRANSCRIPTION_MODEL,
+        response_format: 'json'
       }
     )
-    @logger.debug { "transcribe_diarized: response=#{response.inspect}" }
+    @logger.debug { "transcribe: response=#{response.inspect}" }
     handle_response(response)
   end
 
@@ -59,18 +58,23 @@ class OpenAIClient
     handle_response(response)
   end
 
-  def translate_to_english(file)
-    @logger.info { "translate_to_english: model=#{DISFLUENCY_TRANSCRIPTION_MODEL}" }
-    file.rewind
-    response = @client.audio.translate(
+  def translate_to_english(text)
+    @logger.info { "translate_to_english: model=#{CHAT_MODEL}" }
+    @logger.debug { "translate_to_english: text=#{text}" }
+    response = @client.chat(
       parameters: {
-        file: file,
-        model: DISFLUENCY_TRANSCRIPTION_MODEL,
-        response_format: 'verbose_json'
+        model: CHAT_MODEL,
+        temperature: 0,
+        messages: [
+          { role: 'system', content: 'Translate the following text to English. Return only the translated text, nothing else.' },
+          { role: 'user', content: text }
+        ]
       }
     )
-    @logger.debug { "translate_to_english: response=#{response.inspect}" }
     handle_response(response)
+    result = response.dig('choices', 0, 'message', 'content')
+    @logger.debug { "translate_to_english: result=#{result}" }
+    result
   end
 
   DISFLUENCY_ANALYSIS_PROMPT = <<~PROMPT.freeze

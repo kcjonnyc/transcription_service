@@ -5,11 +5,11 @@ import { transcribeAudio } from './api/transcriptionApi';
 import ModeSelector from './components/ModeSelector';
 import AudioUploader from './components/AudioUploader';
 import TranscriptionStatus from './components/TranscriptionStatus';
-import MerchantBuyerResult from './components/merchant/MerchantBuyerResult';
+import TranscribeResult from './components/TranscribeResult';
 import DisfluencyResult from './components/disfluency/DisfluencyResult';
 
 function App() {
-  const [mode, setMode] = useState<Mode>('merchant_buyer');
+  const [mode, setMode] = useState<Mode>('transcribe');
   const [result, setResult] = useState<TranscriptionResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -71,18 +71,14 @@ function App() {
           </div>
         )}
 
-        {result && result.mode === 'merchant_buyer' && (
-          <MerchantBuyerResult result={result} />
+        {result && result.mode === 'transcribe' && (
+          <TranscribeResult result={result} />
         )}
 
         {result && result.mode === 'disfluency' && (
           <DisfluencyResult result={result} />
         )}
       </main>
-
-      <footer className="app-footer">
-        <p>Powered by Whisper and Claude AI</p>
-      </footer>
     </div>
   );
 }

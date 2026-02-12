@@ -8,8 +8,8 @@ interface TranscriptionStatusProps {
 function TranscriptionStatus({ isLoading, mode }: TranscriptionStatusProps) {
   if (!isLoading) return null;
 
-  const modeMessage = mode === 'merchant_buyer'
-    ? 'Identifying speakers and transcribing conversation...'
+  const modeMessage = mode === 'transcribe'
+    ? 'Transcribing audio...'
     : 'Transcribing and analyzing disfluencies...';
 
   return (

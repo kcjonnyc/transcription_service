@@ -1,19 +1,8 @@
-export type Mode = 'merchant_buyer' | 'disfluency';
+export type Mode = 'transcribe' | 'disfluency';
 
-export interface Segment {
-  id: number;
-  speaker: string;
-  start: number;
-  end: number;
-  text: string;
-}
-
-export interface MerchantBuyerResponse {
-  mode: 'merchant_buyer';
+export interface TranscribeResponse {
+  mode: 'transcribe';
   full_text: string;
-  segments: Segment[];
-  speakers: string[];
-  speaker_labels: Record<string, string>;
   translation: string | null;
 }
 
@@ -97,4 +86,4 @@ export interface DisfluencyResponse {
   llm_analysis: LlmDisfluencyAnalysis;
 }
 
-export type TranscriptionResponse = MerchantBuyerResponse | DisfluencyResponse;
+export type TranscriptionResponse = TranscribeResponse | DisfluencyResponse;

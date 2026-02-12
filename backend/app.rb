@@ -9,7 +9,7 @@ class TranscriptionApp < Sinatra::Base
   end
 
   STRATEGIES = {
-    'merchant_buyer' => Strategies::MerchantBuyerStrategy,
+    'transcribe' => Strategies::MerchantBuyerStrategy,
     'disfluency' => Strategies::DisfluencyStrategy
   }.freeze
 
@@ -28,7 +28,7 @@ class TranscriptionApp < Sinatra::Base
 
     mode = params[:mode]
     unless STRATEGIES.key?(mode)
-      halt 400, { error: "Invalid mode: #{mode}. Must be 'merchant_buyer' or 'disfluency'" }.to_json
+      halt 400, { error: "Invalid mode: #{mode}. Must be 'transcribe' or 'disfluency'" }.to_json
     end
 
     file = params[:file][:tempfile]

@@ -135,7 +135,7 @@ function AudioUploader({ onUpload, mode, isLoading }: AudioUploaderProps) {
       </div>
 
       <div className="upload-options">
-        {mode === 'merchant_buyer' && (
+        {mode === 'transcribe' && (
           <label className="translate-checkbox">
             <input
               type="checkbox"
