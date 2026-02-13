@@ -16,7 +16,7 @@ class OpenAIClient
   CHAT_MODEL = 'gpt-4o-mini'
 
   DISFLUENCY_PROMPT = 'Um, uh, hmm, like, you know, I mean, so, basically, actually, literally, right, well, anyway. ' \
-    'I- I was, uh, th- thinking about, um, like, you know what I mean? So I was going-- I went to the, the, the store. ' \
+    'I- I was, uh, th- thinking about, um, like, you know what I mean? I went to the, the, the store. ' \
     'Sooo, wellll, I, um, beca- because, like, I just, you know, I- I- I couldn\'t, um, reme- remember.'
 
   def initialize(logger: nil)
@@ -94,7 +94,7 @@ class OpenAIClient
     - "sound_repetitions": stuttered beginnings before the completed word. Includes single
       stutters ("b- but", "wh- what") and repeated stutters ("a- a- a- another").
     - "prolongations": repeated characters ("sooo", "wellll")
-    - "revisions": self-corrections with -- ("going-- I went")
+    - "revisions": sentence is corrected by the speaker ("I was going, I went")
     - "partial_words": incomplete words ending with a hyphen where the speaker does NOT
       complete the word ("gon-", "thi-"). If the completed word follows, classify as
       sound_repetitions instead.
