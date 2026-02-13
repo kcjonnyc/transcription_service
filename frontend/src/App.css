@@ -803,6 +803,207 @@
 }
 
 /* ==========================================
+   Input Source Toggle
+   ========================================== */
+
+.input-source-toggle {
+  display: flex;
+  gap: 0;
+  margin-bottom: 1.5rem;
+  border-radius: 2rem;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  background-color: #f9fafb;
+  width: fit-content;
+}
+
+.input-source-tab {
+  padding: 0.5rem 1.25rem;
+  border: none;
+  background: transparent;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #9ca3af;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.input-source-tab:hover {
+  color: #6b7280;
+}
+
+.input-source-tab.active {
+  background-color: #ffffff;
+  color: #3b82f6;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+/* ==========================================
+   Audio Recorder
+   ========================================== */
+
+.recorder-idle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2.5rem 1.5rem;
+  cursor: pointer;
+  border: 2px dashed #d1d5db;
+  border-radius: 0.5rem;
+  background-color: #fafafa;
+  transition: all 0.2s ease;
+}
+
+.recorder-idle:hover {
+  border-color: #93c5fd;
+  background-color: #eff6ff;
+}
+
+.mic-button {
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 50%;
+  border: 2px solid #d1d5db;
+  background: white;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.recorder-idle:hover .mic-button {
+  border-color: #3b82f6;
+  color: #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+.recorder-hint {
+  color: #6b7280;
+  font-size: 0.95rem;
+}
+
+.recorder-permission {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 3rem 1.5rem;
+}
+
+.recorder-active {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.recorder-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.recording-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #ef4444;
+}
+
+.red-dot {
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+  background-color: #ef4444;
+  animation: pulse-dot 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.recording-timer {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1f2937;
+  font-variant-numeric: tabular-nums;
+}
+
+.waveform-canvas {
+  width: 100%;
+  height: 80px;
+  border-radius: 0.375rem;
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+}
+
+.stop-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.25rem;
+  border: none;
+  border-radius: 0.5rem;
+  background-color: #ef4444;
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  align-self: center;
+}
+
+.stop-button:hover {
+  background-color: #dc2626;
+}
+
+.recorder-review {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.audio-player {
+  width: 100%;
+  border-radius: 0.375rem;
+}
+
+.recorder-review-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.re-record-btn {
+  padding: 0.4rem 0.9rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  background: white;
+  color: #374151;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.re-record-btn:hover {
+  background-color: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.recording-duration {
+  font-size: 0.85rem;
+  color: #9ca3af;
+}
+
+/* ==========================================
    Responsive
    ========================================== */
 
@@ -837,5 +1038,14 @@
 
   .category-table {
     font-size: 0.8rem;
+  }
+
+  .input-source-toggle {
+    width: 100%;
+  }
+
+  .input-source-tab {
+    flex: 1;
+    text-align: center;
   }
 }

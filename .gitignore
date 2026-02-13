@@ -1,3 +1,4 @@
 .env
 .claude
 dist
+node_modules

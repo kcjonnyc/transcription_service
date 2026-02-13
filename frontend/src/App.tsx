@@ -1,15 +1,17 @@
 import { useState } from 'react';
 import './App.css';
-import { Mode, TranscriptionResponse } from './types';
+import { Mode, InputSource, TranscriptionResponse } from './types';
 import { transcribeAudio } from './api/transcriptionApi';
 import ModeSelector from './components/ModeSelector';
 import AudioUploader from './components/AudioUploader';
+import AudioRecorder from './components/AudioRecorder';
 import TranscriptionStatus from './components/TranscriptionStatus';
 import TranscribeResult from './components/TranscribeResult';
 import DisfluencyResult from './components/disfluency/DisfluencyResult';
 
 function App() {
   const [mode, setMode] = useState<Mode>('transcribe');
+  const [inputSource, setInputSource] = useState<InputSource>('upload');
   const [result, setResult] = useState<TranscriptionResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -44,23 +46,52 @@ function App() {
     setError(null);
   }
 
+  function handleInputSourceChange(source: InputSource) {
+    setInputSource(source);
+    setResult(null);
+    setError(null);
+  }
+
   return (
     <div className="app">
       <header className="app-header">
         <h1 className="app-title">Transcription Service</h1>
         <p className="app-subtitle">
-          Upload an audio file to transcribe and analyze conversations
+          Upload or record audio to transcribe and analyze conversations
         </p>
       </header>
 
       <main className="app-main">
         <ModeSelector mode={mode} onModeChange={handleModeChange} />
 
-        <AudioUploader
-          onUpload={handleUpload}
-          mode={mode}
-          isLoading={isLoading}
-        />
+        <div className="input-source-toggle">
+          <button
+            className={`input-source-tab ${inputSource === 'upload' ? 'active' : ''}`}
+            onClick={() => handleInputSourceChange('upload')}
+          >
+            Upload File
+          </button>
+          <button
+            className={`input-source-tab ${inputSource === 'record' ? 'active' : ''}`}
+            onClick={() => handleInputSourceChange('record')}
+          >
+            Record Audio
+          </button>
+        </div>
+
+        {inputSource === 'upload' ? (
+          <AudioUploader
+            onUpload={handleUpload}
+            mode={mode}
+            isLoading={isLoading}
+          />
+        ) : (
+          <AudioRecorder
+            onUpload={handleUpload}
+            mode={mode}
+            isLoading={isLoading}
+          />
+        )}
 
         <TranscriptionStatus isLoading={isLoading} mode={mode} />
 

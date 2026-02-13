@@ -1,5 +1,7 @@
 export type Mode = 'transcribe' | 'disfluency';
 
+export type InputSource = 'upload' | 'record';
+
 export interface TranscribeResponse {
   mode: 'transcribe';
   full_text: string;
