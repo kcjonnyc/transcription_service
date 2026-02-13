@@ -6,6 +6,7 @@ Bundler.require(:default)
 require 'dotenv/load'
 require 'json'
 require 'sinatra/base'
+require 'sinatra/reloader'
 require 'rack/cors'
 require 'openai'
 

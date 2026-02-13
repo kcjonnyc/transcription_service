@@ -9,6 +9,7 @@ gem 'ruby-openai', '~> 7.0'
 gem 'dotenv', '~> 3.1'
 gem 'json'
 gem 'rackup'
+gem 'sinatra-contrib', '~> 4.0'
 
 group :test do
   gem 'rspec', '~> 3.13'

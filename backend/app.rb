@@ -1,6 +1,11 @@
 # frozen_string_literal: true
 
 class TranscriptionApp < Sinatra::Base
+  configure :development do
+    register Sinatra::Reloader
+    also_reload File.join(__dir__, 'lib', '**', '*.rb')
+  end
+
   use Rack::Cors do
     allow do
       origins '*'
