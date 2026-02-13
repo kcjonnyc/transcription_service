@@ -54,11 +54,10 @@ class LlmDisfluencyAnalyzer
 
   # Walk the hierarchical hash from the LLM and build one disfluency entry per occurrence.
   #
-  # Expected format:
-  #   { "filler_words" => { "um" => [0, 5], "you know" => [[3, 4]] },
-  #     "consecutive_word_repetitions" => { "I I" => [[1, 2]] } }
+  # Expected format (range-based):
+  #   { "filler_words" => { "um" => [{"start" => 0, "end" => 0}, {"start" => 5, "end" => 5}] },
+  #     "consecutive_word_repetitions" => { "I I" => [{"start" => 1, "end" => 2}] } }
   #
-  # Single-word disfluencies have flat integer indices; multi-word have arrays of index-arrays.
   #: (Hash[String, untyped], Array[Hash[Symbol, untyped]]) -> Array[Hash[Symbol, untyped]]
   def parse_disfluencies(raw, indexed_words)
     return [] unless raw.is_a?(Hash)
@@ -67,18 +66,9 @@ class LlmDisfluencyAnalyzer
     raw.each do |category, words_hash|
       next unless words_hash.is_a?(Hash)
 
-      words_hash.each do |text, indices_data|
-        if indices_data.is_a?(Array) && indices_data.first.is_a?(Array)
-          # Multi-word: [[1, 2], [7, 8]] → flat [1, 2, 7, 8], count 2
-          flat_indices = indices_data.flatten
-          count = indices_data.length
-        else
-          # Single-word: [0, 5] → unchanged, count = array length
-          flat_indices = Array(indices_data)
-          count = flat_indices.length
-        end
-
-        disfluencies << { category: category, text: text, word_indices: flat_indices, count: count }
+      words_hash.each do |text, ranges_data|
+        ranges = Array(ranges_data).map { |r| { start: r['start'], end: r['end'] } }
+        disfluencies << { category: category, text: text, ranges: ranges }
       end
     end
 
@@ -96,6 +86,6 @@ class LlmDisfluencyAnalyzer
 
   #: (Hash[Symbol, untyped]) -> Integer
   def occurrence_count(disfluency)
-    disfluency[:count]
+    disfluency[:ranges].length
   end
 end

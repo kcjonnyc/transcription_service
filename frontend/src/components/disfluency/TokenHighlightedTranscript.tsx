@@ -1,5 +1,5 @@
 import React from 'react';
-import { LlmAnnotatedSentence, Pause } from '../../types';
+import { LlmAnnotatedSentence, LlmDisfluency, Pause } from '../../types';
 
 interface TokenHighlightedTranscriptProps {
   sentences: LlmAnnotatedSentence[];
@@ -36,56 +36,102 @@ function renderTokenHighlightedText(
     pauseAfterWord.set(normalizeWord(p.after_word), p);
   });
 
-  return (
-    <>
-      {sentence.tokens.map((token, i) => {
-        const disfluency = sentence.disfluencies.find((d) =>
-          d.word_indices.includes(token.index)
-        );
+  // Build a lookup: tokenIndex → { disfluency, rangeStart, rangeEnd }
+  const tokenLookup = new Map<
+    number,
+    { disfluency: LlmDisfluency; rangeStart: number; rangeEnd: number }
+  >();
+  for (const d of sentence.disfluencies) {
+    for (const range of d.ranges) {
+      for (let idx = range.start; idx <= range.end; idx++) {
+        tokenLookup.set(idx, {
+          disfluency: d,
+          rangeStart: range.start,
+          rangeEnd: range.end,
+        });
+      }
+    }
+  }
 
-        const separator = i > 0 ? ' ' : '';
+  const elements: React.ReactNode[] = [];
+  let i = 0;
 
-        // Check if there's a pause after this token
-        const pause = pauseAfterWord.get(normalizeWord(token.text));
-        const pauseMarker = pause ? (
+  while (i < sentence.tokens.length) {
+    const token = sentence.tokens[i];
+    const lookup = tokenLookup.get(token.index);
+    const separator = i > 0 ? ' ' : '';
+
+    if (lookup && token.index === lookup.rangeStart) {
+      // Collect all tokens in this range into a single highlighted span
+      const rangeTokens: string[] = [];
+      let lastTokenIndex = i;
+      for (let idx = i; idx < sentence.tokens.length; idx++) {
+        const t = sentence.tokens[idx];
+        if (t.index > lookup.rangeEnd) break;
+        rangeTokens.push(t.text);
+        lastTokenIndex = idx;
+      }
+
+      const categoryInfo = CATEGORY_COLORS[lookup.disfluency.category] || {
+        bg: '#e5e7eb',
+        label: lookup.disfluency.category,
+      };
+
+      elements.push(
+        <React.Fragment key={token.index}>
+          {separator}
           <span
+            className="disfluency-highlight"
+            style={{ backgroundColor: categoryInfo.bg }}
+            title={categoryInfo.label}
+          >
+            {rangeTokens.join(' ')}
+          </span>
+        </React.Fragment>
+      );
+
+      // Check for pause after the last token in the range
+      const lastToken = sentence.tokens[lastTokenIndex];
+      const pause = pauseAfterWord.get(normalizeWord(lastToken.text));
+      if (pause) {
+        elements.push(
+          <span
+            key={`pause-${lastToken.index}`}
             className="disfluency-highlight"
             style={{ backgroundColor: '#fce7f3' }}
             title={`Pause: ${pause.duration}s`}
           >
             {' '}[Pause {pause.duration}s]
           </span>
-        ) : null;
-
-        if (disfluency) {
-          const categoryInfo = CATEGORY_COLORS[disfluency.category] || {
-            bg: '#e5e7eb',
-            label: disfluency.category,
-          };
-          return (
-            <React.Fragment key={token.index}>
-              {separator}
-              <span
-                className="disfluency-highlight"
-                style={{ backgroundColor: categoryInfo.bg }}
-                title={categoryInfo.label}
-              >
-                {token.text}
-              </span>
-              {pauseMarker}
-            </React.Fragment>
-          );
-        }
-
-        return (
-          <React.Fragment key={token.index}>
-            {separator}{token.text}
-            {pauseMarker}
-          </React.Fragment>
         );
-      })}
-    </>
-  );
+      }
+
+      i = lastTokenIndex + 1;
+    } else {
+      // Non-highlighted token
+      const pause = pauseAfterWord.get(normalizeWord(token.text));
+      const pauseMarker = pause ? (
+        <span
+          key={`pause-${token.index}`}
+          className="disfluency-highlight"
+          style={{ backgroundColor: '#fce7f3' }}
+          title={`Pause: ${pause.duration}s`}
+        >
+          {' '}[Pause {pause.duration}s]
+        </span>
+      ) : null;
+
+      elements.push(
+        <React.Fragment key={token.index}>
+          {separator}{token.text}
+          {pauseMarker}
+        </React.Fragment>
+      );
+      i++;
+    }
+  }
+
+  return <>{elements}</>;
 }
 
 function TokenHighlightedTranscript({

@@ -56,10 +56,15 @@ export interface Token {
   text: string;
 }
 
+export interface DisfluencyRange {
+  start: number;
+  end: number;
+}
+
 export interface LlmDisfluency {
   category: string;
   text: string;
-  word_indices: number[];
+  ranges: DisfluencyRange[];
 }
 
 export interface LlmAnnotatedSentence {

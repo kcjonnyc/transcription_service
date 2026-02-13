@@ -15,14 +15,14 @@ RSpec.describe DisfluencyAnalysis do
     end.new
   end
 
-  # Harness that mimics LlmDisfluencyAnalyzer: count from explicit :count field
+  # Harness that mimics LlmDisfluencyAnalyzer: count from ranges length
   let(:llm_style) do
     Class.new do
       include DisfluencyAnalysis
       public :compute_struggle_score, :build_summary, :build_by_category, :build_most_common_fillers
 
       def occurrence_count(disfluency)
-        disfluency[:count]
+        disfluency[:ranges].length
       end
     end.new
   end
@@ -42,8 +42,8 @@ RSpec.describe DisfluencyAnalysis do
       expect(regex_style.compute_struggle_score(disfluencies, 3)).to be_within(0.1).of(33.3)
     end
 
-    it 'computes weighted score for llm-style (word_indices.length per disfluency)' do
-      disfluencies = [{ category: 'filler_words', word_indices: [0, 4], count: 2 }]
+    it 'computes weighted score for llm-style (ranges.length per disfluency)' do
+      disfluencies = [{ category: 'filler_words', ranges: [{ start: 0, end: 0 }, { start: 4, end: 4 }] }]
       # weight 1, 2 occurrences, 5 words => (2/5)*100 = 40.0
       expect(llm_style.compute_struggle_score(disfluencies, 5)).to be_within(0.1).of(40.0)
     end
@@ -80,7 +80,7 @@ RSpec.describe DisfluencyAnalysis do
     end
 
     it 'uses occurrence_count for llm-style totals' do
-      disfluencies = [{ category: 'filler_words', text: 'um', word_indices: [0, 3, 7], count: 3 }]
+      disfluencies = [{ category: 'filler_words', text: 'um', ranges: [{ start: 0, end: 0 }, { start: 3, end: 3 }, { start: 7, end: 7 }] }]
       summary = llm_style.build_summary(disfluencies, 10, [])
 
       expect(summary[:total_disfluencies]).to eq(3)
@@ -103,7 +103,7 @@ RSpec.describe DisfluencyAnalysis do
 
     it 'uses occurrence_count for llm-style counts' do
       disfluencies = [
-        { category: 'filler_words', text: 'um', word_indices: [0, 3], count: 2 }
+        { category: 'filler_words', text: 'um', ranges: [{ start: 0, end: 0 }, { start: 3, end: 3 }] }
       ]
       result = llm_style.build_by_category(disfluencies)
 
@@ -135,9 +135,9 @@ RSpec.describe DisfluencyAnalysis do
       expect(result['uh']).to eq(1)
     end
 
-    it 'counts fillers for llm-style (word_indices.length each)' do
+    it 'counts fillers for llm-style (ranges.length each)' do
       disfluencies = [
-        { category: 'filler_words', text: 'um', word_indices: [0, 3, 7], count: 3 }
+        { category: 'filler_words', text: 'um', ranges: [{ start: 0, end: 0 }, { start: 3, end: 3 }, { start: 7, end: 7 }] }
       ]
       result = llm_style.build_most_common_fillers(disfluencies)
 

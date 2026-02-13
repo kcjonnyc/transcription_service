@@ -13,7 +13,7 @@ class OpenAIClient
 
   TRANSCRIPTION_MODEL = 'gpt-4o-transcribe'
   DISFLUENCY_TRANSCRIPTION_MODEL = 'whisper-1'
-  CHAT_MODEL = 'gpt-4o-mini'
+  CHAT_MODEL = 'gpt-4o'
 
   DISFLUENCY_PROMPT = 'Um, uh, hmm, like, you know, I mean, so, basically, actually, literally, right, well, anyway. ' \
     'I- I was, uh, th- thinking about, um, like, you know what I mean? I went to the, the, the store. ' \
@@ -79,13 +79,14 @@ class OpenAIClient
 
   DISFLUENCY_ANALYSIS_PROMPT = <<~PROMPT.freeze
     You are a speech disfluency analyzer. You receive a sentence where each word is prefixed
-    with its index like [0]word [1]word. Identify all disfluencies.
+    with its index like [0]word [1]word. Identify and return all disfluencies in the following format.
 
-    Return JSON: {"disfluencies": {"category": {"text": [indices]}, ...}}
+    Return JSON: {"disfluencies": {"category": {"text": [ranges]}, ...}}
 
-    - Group by category, then by the disfluency text as it appears (without index prefixes).
-    - Single-word disfluencies: flat array of integer indices — "um": [0, 5]
-    - Multi-word disfluencies: array of index-arrays — "I I": [[1, 2]]
+    - Group by category, then by the exact disfluency text as it appears (without index prefixes).
+    - Each occurrence is a range object {"start": N, "end": M} where start and end are token indices.
+    - Single-word disfluencies appearing at indices 0 and 5: "um": [{"start": 0, "end": 0}, {"start": 5, "end": 5}]
+    - Multi-word disfluencies spanning indices 1-2: "I I": [{"start": 1, "end": 2}]
 
     Categories (use these exact strings):
     - "filler_words": um, uh, hmm, like (filler), you know, I mean, basically, actually, literally
@@ -103,13 +104,13 @@ class OpenAIClient
 
     Example input: [0]Um, [1]I [2]I [3]was [4]thinking.
     Example output: {"disfluencies": {
-      "filler_words": { "Um,": [0] },
-      "consecutive_word_repetitions": { "I I": [[1, 2]] }
+      "filler_words": { "Um,": [{"start": 0, "end": 0}] },
+      "consecutive_word_repetitions": { "I I": [{"start": 1, "end": 2}] },
     }}
 
     Example input: [0]This [1]is [2]a- [3]a- [4]a- [5]another [6]test.
     Example output: {"disfluencies": {
-      "sound_repetitions": { "a- a- a- another": [[2, 3, 4, 5]] }
+      "sound_repetitions": { "a- a- a- another": [{"start": 2, "end": 5}] }
     }}
   PROMPT
 

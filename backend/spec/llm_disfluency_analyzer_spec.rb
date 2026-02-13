@@ -45,33 +45,32 @@ RSpec.describe LlmDisfluencyAnalyzer do
 
     it 'parses and returns disfluencies with symbolized keys' do
       allow(client).to receive(:chat_analyze_disfluencies).and_return({
-        'filler_words' => { 'Um,' => [0] }
+        'filler_words' => { 'Um,' => [{ 'start' => 0, 'end' => 0 }] }
       })
 
       result = analyzer.analyze_sentence('Um, I was thinking.')
 
       expect(result[:disfluencies]).to eq([
-        { category: 'filler_words', text: 'Um,', word_indices: [0], count: 1 }
+        { category: 'filler_words', text: 'Um,', ranges: [{ start: 0, end: 0 }] }
       ])
     end
 
     it 'skips categories with non-hash values' do
       allow(client).to receive(:chat_analyze_disfluencies).and_return({
         'filler_words' => 'not a hash',
-        'consecutive_word_repetitions' => { 'I I' => [[1, 2]] }
+        'consecutive_word_repetitions' => { 'I I' => [{ 'start' => 1, 'end' => 2 }] }
       })
 
       result = analyzer.analyze_sentence('Um, I I was thinking.')
 
       expect(result[:disfluencies].length).to eq(1)
       expect(result[:disfluencies][0][:category]).to eq('consecutive_word_repetitions')
-      expect(result[:disfluencies][0][:word_indices]).to eq([1, 2])
-      expect(result[:disfluencies][0][:count]).to eq(1)
+      expect(result[:disfluencies][0][:ranges]).to eq([{ start: 1, end: 2 }])
     end
 
-    it 'stores all occurrences in a single entry with multiple word_indices' do
+    it 'stores all occurrences in a single entry with multiple ranges' do
       allow(client).to receive(:chat_analyze_disfluencies).and_return({
-        'filler_words' => { 'Um,' => [0, 4] }
+        'filler_words' => { 'Um,' => [{ 'start' => 0, 'end' => 0 }, { 'start' => 4, 'end' => 4 }] }
       })
 
       result = analyzer.analyze_sentence('Um, I was thinking uh, yeah.')
@@ -79,25 +78,23 @@ RSpec.describe LlmDisfluencyAnalyzer do
       fillers = result[:disfluencies].select { |d| d[:category] == 'filler_words' }
 
       expect(fillers.length).to eq(1)
-      expect(fillers[0][:word_indices]).to eq([0, 4])
-      expect(fillers[0][:count]).to eq(2)
+      expect(fillers[0][:ranges]).to eq([{ start: 0, end: 0 }, { start: 4, end: 4 }])
     end
 
-    it 'flattens multi-word disfluency indices' do
+    it 'parses range-based multi-word disfluency' do
       allow(client).to receive(:chat_analyze_disfluencies).and_return({
-        'consecutive_word_repetitions' => { 'I I' => [[1, 2]] }
+        'consecutive_word_repetitions' => { 'I I' => [{ 'start' => 1, 'end' => 2 }] }
       })
 
       result = analyzer.analyze_sentence('Um, I I was thinking.')
 
       expect(result[:disfluencies].length).to eq(1)
-      expect(result[:disfluencies][0][:word_indices]).to eq([1, 2])
-      expect(result[:disfluencies][0][:count]).to eq(1)
+      expect(result[:disfluencies][0][:ranges]).to eq([{ start: 1, end: 2 }])
     end
 
     it 'uses LLM-provided text for disfluency entries' do
       allow(client).to receive(:chat_analyze_disfluencies).and_return({
-        'filler_words' => { 'um' => [0] }
+        'filler_words' => { 'um' => [{ 'start' => 0, 'end' => 0 }] }
       })
 
       result = analyzer.analyze_sentence('Um, I was thinking.')
@@ -264,9 +261,9 @@ RSpec.describe LlmDisfluencyAnalyzer do
         allow(client).to receive(:chat_analyze_disfluencies) do
           call_count += 1
           if call_count == 1
-            { 'filler_words' => { 'Um,' => [0] } }
+            { 'filler_words' => { 'Um,' => [{ 'start' => 0, 'end' => 0 }] } }
           else
-            { 'filler_words' => { 'Uh,' => [0] } }
+            { 'filler_words' => { 'Uh,' => [{ 'start' => 0, 'end' => 0 }] } }
           end
         end
 
